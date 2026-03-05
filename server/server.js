@@ -1,9 +1,10 @@
 // Imports
 import express from 'express';
 import dotenv from 'dotenv';
-import { logReq, globalErr } from './middleware.js';
+import { logReq, globalErr } from './middleware/middlewares.js';
 
 // Routes
+import characterRoutes from './routes/characters.js'; 
 
 // Setups
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(logReq);
 
 // Routes
+app.use('/api/characters', characterRoutes); 
 
 // Global error handling
 app.use(globalErr);
