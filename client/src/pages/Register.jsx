@@ -1,12 +1,28 @@
 import { useState } from "react";
+import axios from "axios";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState(""); 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Register simulated!\nEmail: ${email}\nPassword: ${password}`);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/register", {
+        email,
+        password
+      });
+
+      setMessage(res.data.message); 
+
+      setEmail("");
+      setPassword("");
+
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Error registering user");
+    }
   };
 
   return (
@@ -29,6 +45,7 @@ export default function Register() {
         />
         <button type="submit">Register</button>
       </form>
+      {message && <p>{message}</p>} 
     </div>
   );
 }
