@@ -20,7 +20,6 @@ const categoryFilters = {
                 { value: "9", label: "9th" }
             ]
         },
-
         {
             name: "school",
             label: "School",
@@ -36,10 +35,7 @@ const categoryFilters = {
                 { value: "transmutation", label: "Transmutation" }
             ]
         },
-
-
     ],
-
     monsters: [
         {
             name: "challenge_rating",
@@ -84,31 +80,29 @@ const categoryFilters = {
     ]
 };
 
-{/* Pagination component to reuse */ }
-const PaginationControls = ({ page, totalPages, pageNumbers, fetchData }) => (
+// Pagination Component
+const PaginationControls = ({ page, totalPages, pageNumbers, onPageChange }) => (
     <div className="d-flex align-items-center gap-2 mb-3">
         <button
             className="btn btn-secondary"
             disabled={page <= 1}
-            onClick={() => fetchData(null, page - 1)}
+            onClick={() => onPageChange(page - 1)}
         >
             &lt;
         </button>
-
         {pageNumbers.map((num) => (
             <button
                 key={num}
                 className={`btn ${num === page ? "btn-primary" : "btn-outline-secondary"}`}
-                onClick={() => fetchData(null, num)}
+                onClick={() => onPageChange(num)}
             >
                 {num}
             </button>
         ))}
-
         <button
             className="btn btn-secondary"
             disabled={page >= totalPages}
-            onClick={() => fetchData(null, page + 1)}
+            onClick={() => onPageChange(page + 1)}
         >
             &gt;
         </button>
@@ -116,73 +110,54 @@ const PaginationControls = ({ page, totalPages, pageNumbers, fetchData }) => (
 );
 
 export default function ApiCategorySearch({ category }) {
-
     const [items, setItems] = useState([]);
     const [query, setQuery] = useState("");
     const [filters, setFilters] = useState({});
     const [selectedItem, setSelectedItem] = useState(null);
-
     const [count, setCount] = useState(0);
     const [page, setPage] = useState(1);
-
     const [loading, setLoading] = useState(false);
 
-    const fetchData = async (url = null, pageNumber = 1) => {
-
+    // Helper function to fetch data
+    const fetchData = async (pageNumber = 1) => {
         setLoading(true);
         setSelectedItem(null);
 
-        let baseUrl = `https://api.open5e.com/${category}/?limit=50&`;
+        let baseUrl = `https://api.open5e.com/${category}/?limit=50&page=${pageNumber}&`;
 
-        // Apply filters per category
+        // Apply filters based on category
         if (category === "spells") {
-            if (filters.level) baseUrl += `level_int=${Number(filters.level)}&`;
+            if (filters.level) baseUrl += `level_int=${filters.level}&`;
             if (filters.school) baseUrl += `school=${filters.school.toLowerCase()}&`;
-        } else if (category === "monsters") {
-            if (filters.challenge_rating) baseUrl += `cr=${filters.challenge_rating}&`;
+        } else if (category === "monsters" && filters.challenge_rating) {
+            baseUrl += `cr=${filters.challenge_rating}&`;
         }
 
         // Add search query
         if (query) baseUrl += `name__icontains=${query}&`;
 
-        // Add other dynamic filters if any
-        Object.entries(filters).forEach(([key, val]) => {
-            if (val && !["level", "school", "cr"].includes(key)) {
-                baseUrl += `${key}=${val.toLowerCase()}&`;
-            }
-        });
-
+        // Fetch data
         try {
-
-            const res = await fetch(url || baseUrl);
+            const res = await fetch(baseUrl);
             const data = await res.json();
-
             setItems(data.results || []);
-
             setCount(data.count || 0);
             setPage(pageNumber);
-
         } catch (err) {
-            console.error("API error:", err);
+            console.error("Error fetching data:", err);
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     useEffect(() => {
-        const timeout = setTimeout(() => fetchData(), 500);
-        return () => clearTimeout(timeout);
-    }, [category, query, filters]);
+        fetchData(page);
+    }, [category, query, filters, page]);
 
-    const pageNumbers = [];
     const totalPages = Math.ceil(count / 50);
-
+    const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
-        if (
-            i === 1 ||
-            i === totalPages ||
-            (i >= page - 2 && i <= page + 2)
-        ) {
+        if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
             pageNumbers.push(i);
         }
     }
@@ -191,7 +166,7 @@ export default function ApiCategorySearch({ category }) {
         <div className="container mt-4">
             <h1 className="text-capitalize mb-3">{category}</h1>
 
-            {/* FILTERS */}
+            {/* Filter UI */}
             {categoryFilters[category] && (
                 <div className="d-flex flex-wrap gap-2 mb-3">
                     {categoryFilters[category].map((filter) => (
@@ -217,7 +192,6 @@ export default function ApiCategorySearch({ category }) {
                     ))}
                 </div>
             )}
-
             {/* SEARCH */}
             <input
                 className="form-control mb-3"
@@ -249,7 +223,7 @@ export default function ApiCategorySearch({ category }) {
                             page={page}
                             totalPages={totalPages}
                             pageNumbers={pageNumbers}
-                            fetchData={fetchData}
+                            onPageChange={setPage}
                         />
 
                         <ul className="list-group">
@@ -272,7 +246,7 @@ export default function ApiCategorySearch({ category }) {
                             page={page}
                             totalPages={totalPages}
                             pageNumbers={pageNumbers}
-                            fetchData={fetchData}
+                            onPageChange={setPage}
                         />
 
                     </div>
