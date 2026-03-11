@@ -22,47 +22,74 @@ export default function Navbar() {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
+
+            {/* Home */}
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/"
-                end
-              >
+              <NavLink className="nav-link" to="/" end>
                 Home
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/dashboard"
-              >
-                Dashboard
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/api-search"
+
+            {/* API Search Dropdown */}
+            <li className="nav-item dropdown">
+              <a
+                className="nav-link dropdown-toggle"
+                href="#"
+                id="apiDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
                 D&D Search
-              </NavLink>
+              </a>
+
+              <ul className="dropdown-menu dropdown-menu-dark">
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/spells">
+                    Spells
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/monsters">
+                    Monsters
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/classes">
+                    Classes
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/races">
+                    Races
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/feats">
+                    Feats
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/api-search/backgrounds">
+                    Backgrounds
+                  </NavLink>
+                </li>
+              </ul>
             </li>
+
+            {/* Auth */}
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/login"
-              >
+              <NavLink className="nav-link" to="/login">
                 Login
               </NavLink>
             </li>
+
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/register"
-              >
+              <NavLink className="nav-link" to="/register">
                 Register
               </NavLink>
             </li>
+
           </ul>
         </div>
       </div>
