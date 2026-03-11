@@ -84,6 +84,37 @@ const categoryFilters = {
     ]
 };
 
+{/* Pagination component to reuse */ }
+const PaginationControls = ({ page, totalPages, pageNumbers, fetchData }) => (
+    <div className="d-flex align-items-center gap-2 mb-3">
+        <button
+            className="btn btn-secondary"
+            disabled={page <= 1}
+            onClick={() => fetchData(null, page - 1)}
+        >
+            &lt;
+        </button>
+
+        {pageNumbers.map((num) => (
+            <button
+                key={num}
+                className={`btn ${num === page ? "btn-primary" : "btn-outline-secondary"}`}
+                onClick={() => fetchData(null, num)}
+            >
+                {num}
+            </button>
+        ))}
+
+        <button
+            className="btn btn-secondary"
+            disabled={page >= totalPages}
+            onClick={() => fetchData(null, page + 1)}
+        >
+            &gt;
+        </button>
+    </div>
+);
+
 export default function ApiCategorySearch({ category }) {
 
     const [items, setItems] = useState([]);
@@ -158,7 +189,6 @@ export default function ApiCategorySearch({ category }) {
 
     return (
         <div className="container mt-4">
-
             <h1 className="text-capitalize mb-3">{category}</h1>
 
             {/* FILTERS */}
@@ -211,404 +241,351 @@ export default function ApiCategorySearch({ category }) {
             {loading && <p>Loading...</p>}
 
             <div className="row">
-                {/* PAGINATION */}
-                <div className="d-flex align-items-center gap-2 mb-3">
-
-                    {/* Previous Button */}
-                    <button
-                        className="btn btn-secondary"
-                        disabled={page <= 1}
-                        onClick={() => fetchData(null, page - 1)}
-                    >
-                        &lt;
-                    </button>
-
-                    {/* Page Buttons */}
-                    {pageNumbers.map((num) => (
-                        <button
-                            key={num}
-                            className={`btn ${num === page ? "btn-primary" : "btn-outline-secondary"}`}
-                            onClick={() => fetchData(null, num)}
-                        >
-                            {num}
-                        </button>
-                    ))}
-
-                    {/* Next Button */}
-                    <button
-                        className="btn btn-secondary"
-                        disabled={page >= totalPages}
-                        onClick={() => fetchData(null, page + 1)}
-                    >
-                        &gt;
-                    </button>
-
-                </div>
-
                 {/* RESULTS LIST */}
                 <div className="col-md-4">
+                    <div className="results-panel">
 
-                    <ul className="list-group">
+                        <PaginationControls
+                            page={page}
+                            totalPages={totalPages}
+                            pageNumbers={pageNumbers}
+                            fetchData={fetchData}
+                        />
 
-                        {items.map((item) => (
-                            <li key={item.slug} className={`list-group-item ${selectedItem?.slug === item.slug ? 'active' : ''}`}>
+                        <ul className="list-group">
+                            {items.map((item) => (
+                                <li key={item.slug} className={`list-group-item ${selectedItem?.slug === item.slug ? 'active' : ''}`}>
 
-                                <button
-                                    className="btn btn-link"
-                                    onClick={() => setSelectedItem(item)}
-                                >
-                                    {item.name}
-                                </button>
+                                    <button
+                                        className="btn btn-link"
+                                        onClick={() => setSelectedItem(item)}
+                                    >
+                                        {item.name}
+                                    </button>
 
-                            </li>
-                        ))}
+                                </li>
+                            ))}
 
-                    </ul>
+                        </ul>
 
+                        <PaginationControls
+                            page={page}
+                            totalPages={totalPages}
+                            pageNumbers={pageNumbers}
+                            fetchData={fetchData}
+                        />
+
+                    </div>
                 </div>
 
                 {/* DETAILS PANEL */}
                 <div className="col-md-8">
+                    <div className="details-panel">
+                        {selectedItem && (
+                            <div className="card bg-dark text-white">
+                                <div className="card-body">
 
-                    {selectedItem && (
+                                    <h3>{selectedItem.name}</h3>
 
-                        <div className="card bg-dark text-white">
-
-                            <div className="card-body">
-
-                                <h3>{selectedItem.name}</h3>
-
-                                {/* SPELLS */}
-                                {category === "spells" && (
-                                    <>
-                                        <p>
-                                            <strong>Level:</strong> {selectedItem.level}<br />
-                                            <strong>School:</strong> {selectedItem.school}<br />
-                                            <strong>Casting Time:</strong> {selectedItem.casting_time}<br />
-                                            <strong>Range:</strong> {selectedItem.range}<br />
-                                            <strong>Components:</strong> {selectedItem.components}<br />
-                                            {selectedItem.material && (
-                                                <>
-                                                    <strong>Material:</strong> {selectedItem.material}<br />
-                                                </>
-                                            )}
-                                            <strong>Duration:</strong> {selectedItem.duration}
-                                        </p>
-
-                                        <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
-
-                                        {selectedItem.higher_level && (
-                                            <>
-                                                <h5>At Higher Levels</h5>
-                                                <ReactMarkdown>{selectedItem.higher_level}</ReactMarkdown>
-                                            </>
-                                        )}
-                                    </>
-                                )}
-
-                                {/* MONSTERS */}
-                                {category === "monsters" && selectedItem && (
-                                    <div className="card bg-dark text-white">
-                                        {/* Header */}
-                                        <h5>({selectedItem.size} {selectedItem.type}, {selectedItem.alignment})</h5>
-                                        <p>
-                                            AC {selectedItem.armor_class} ({selectedItem.armor_desc}) | HP {selectedItem.hit_points} ({selectedItem.hit_dice}) | Speed:{" "}
-                                            {selectedItem.speed
-                                                ? Object.entries(selectedItem.speed)
-                                                    .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} ${v} ft.`)
-                                                    .join(", ")
-                                                : "None"}
-                                        </p>
-
-                                        {/* Abilities */}
-                                        <div className="d-flex gap-2 mb-3 flex-wrap">
-                                            {["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"].map(stat => {
-                                                const label = stat.slice(0, 3).toUpperCase();
-                                                return (
-                                                    <div
-                                                        key={stat}
-                                                        className="text-center bg-secondary px-2 py-1 rounded"
-                                                        style={{ minWidth: "50px" }}
-                                                    >
-                                                        <strong>{label}</strong><br />
-                                                        {selectedItem[stat]}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-
-                                        {/* Defenses & Senses */}
-                                        <p>
-                                            <strong>Damage Resistances:</strong> {selectedItem.damage_resistances || "None"}<br />
-                                            <strong>Damage Immunities:</strong> {selectedItem.damage_immunities || "None"}<br />
-                                            <strong>Condition Immunities:</strong> {selectedItem.condition_immunities || "None"}<br />
-                                            <strong>Senses:</strong> {selectedItem.senses || "None"}<br />
-                                            <strong>Languages:</strong> {selectedItem.languages || "None"}<br />
-                                            <strong>Challenge:</strong> {selectedItem.challenge_rating} (XP TBD)
-                                        </p>
-
-                                        {/* Description */}
-                                        <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
-
-                                        {/* Special Abilities */}
-                                        {selectedItem.special_abilities?.length > 0 && (
-                                            <>
-                                                <h5>Special Abilities</h5>
-                                                {selectedItem.special_abilities.map((a, i) => (
-                                                    <p key={i}><strong>{a.name}.</strong> {a.desc}</p>
-                                                ))}
-                                            </>
-                                        )}
-
-                                        {/* Actions */}
-                                        {selectedItem.actions?.length > 0 && (
-                                            <>
-                                                <h5>Actions</h5>
-                                                {selectedItem.actions.map((a, i) => (
-                                                    <p key={i}><strong>{a.name}.</strong> {a.desc}</p>
-                                                ))}
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* CLASSES */}
-                                {category === "classes" && selectedItem && (
-                                    <div className="card bg-dark text-white mb-4">
-                                        <div className="card-body">
-
-                                            {/* Hit Dice & Proficiencies */}
+                                    {/* SPELLS */}
+                                    {category === "spells" && (
+                                        <>
                                             <p>
-                                                <strong>Hit Dice:</strong> {selectedItem.hit_dice}<br />
-                                                <strong>Hit Points:</strong> {selectedItem.hp_at_1st_level} (1st level), {selectedItem.hp_at_higher_levels} (higher levels)<br />
-                                                <strong>Armor Proficiencies:</strong> {selectedItem.prof_armor}<br />
-                                                <strong>Weapon Proficiencies:</strong> {selectedItem.prof_weapons}<br />
-                                                <strong>Tool Proficiencies:</strong> {selectedItem.prof_tools}<br />
-                                                <strong>Saving Throws:</strong> {selectedItem.prof_saving_throws}<br />
-                                                <strong>Skills:</strong> {selectedItem.prof_skills}<br />
-                                            </p>
-
-                                            {/* Starting Equipment */}
-                                            {selectedItem.equipment && (
-                                                <>
-                                                    <h5>Starting Equipment</h5>
-                                                    <ReactMarkdown>{selectedItem.equipment}</ReactMarkdown>
-                                                </>
-                                            )}
-
-                                            {/* Level Progression Table */}
-                                            {selectedItem.table && (
-                                                <>
-                                                    <h5>Level Progression</h5>
-                                                    <div className="table-responsive">
-                                                        <table className="table table-dark table-striped table-bordered">
-                                                            <tbody>
-                                                                {selectedItem.table
-                                                                    .trim()
-                                                                    .split("\n")
-                                                                    .filter(row => row.startsWith("|") && !row.includes("---"))
-                                                                    .map((row, index) => {
-                                                                        const cells = row
-                                                                            .split("|")
-                                                                            .slice(1, -1) // remove empty first and last cells
-                                                                            .map(cell => cell.trim());
-                                                                        return (
-                                                                            <tr key={index}>
-                                                                                {cells.map((cell, i) => (
-                                                                                    <td key={i}>{cell}</td>
-                                                                                ))}
-                                                                            </tr>
-                                                                        );
-                                                                    })}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </>
-                                            )}
-
-
-                                            {/* Class Features */}
-                                            {selectedItem.desc && (
-                                                <>
-                                                    <h5>Class Features</h5>
-                                                    <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
-                                                </>
-                                            )}
-
-                                            {/* Subclasses / Archetypes */}
-                                            {selectedItem.archetypes?.length > 0 && (
-                                                <>
-                                                    <h5>{selectedItem.subtypes_name}</h5>
-                                                    <ul>
-                                                        {selectedItem.archetypes.map((sub, i) => (
-                                                            <li key={i}>{sub.name}</li>
-                                                        ))}
-                                                    </ul>
-                                                </>
-                                            )}
-
-                                        </div>
-                                    </div>
-                                )}
-                                {/* RACES */}
-                                {category === "races" && selectedItem && (
-                                    <>
-                                        {selectedItem.asi_desc && (
-                                            <ReactMarkdown>{selectedItem.asi_desc}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.age && (
-                                            <ReactMarkdown>{selectedItem.age}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.alignment && (
-                                            <ReactMarkdown>{selectedItem.alignment}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.size && (
-                                            <ReactMarkdown>{selectedItem.size}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.speed_desc && (
-                                            <ReactMarkdown>{selectedItem.speed_desc}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.vision && (
-                                            <ReactMarkdown>{selectedItem.vision}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.languages && (
-                                            <ReactMarkdown>{selectedItem.languages}</ReactMarkdown>
-                                        )}
-
-                                        {selectedItem.traits && (
-                                            <>
-                                                <h5>Traits</h5>
-                                                <ReactMarkdown>{selectedItem.traits}</ReactMarkdown>
-                                            </>
-                                        )}
-                                    </>
-                                )}
-
-                                {/* FEAT DETAILS */}
-                                {selectedItem && category === "feats" && (
-                                    <div className="card bg-dark text-white mb-4">
-                                        <div className="card-body">
-
-                                            {/* Prerequisite */}
-                                            {selectedItem.prerequisite && (
-                                                <p><strong>{selectedItem.prerequisite}</strong></p>
-                                            )}
-
-                                            {/* Description */}
-                                            {selectedItem.desc && (
-                                                <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
-                                            )}
-
-                                            {/* Effects */}
-                                            {selectedItem.effects_desc?.length > 0 && (
-                                                <>
-                                                    <h5>Effects</h5>
-                                                    <ul>
-                                                        {selectedItem.effects_desc.map((effect, i) => (
-                                                            <li key={i}>{effect}</li>
-                                                        ))}
-                                                    </ul>
-                                                </>
-                                            )}
-
-                                        </div>
-                                    </div>
-                                )}
-                                {/* BACKGROUND DETAILS */}
-                                {selectedItem && category === "backgrounds" && (
-                                    <div className="card bg-dark text-white mb-4">
-                                        <div className="card-body">
-
-                                            {/* Description */}
-                                            {selectedItem.desc && (
-                                                <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
-                                            )}
-
-                                            {/* Proficiencies */}
-                                            <p>
-                                                <strong>Skill Proficiencies:</strong> {selectedItem.skill_proficiencies || "None"}<br />
-                                                {selectedItem.tool_proficiencies && (
+                                                <strong>Level:</strong> {selectedItem.level}<br />
+                                                <strong>School:</strong> {selectedItem.school}<br />
+                                                <strong>Casting Time:</strong> {selectedItem.casting_time}<br />
+                                                <strong>Range:</strong> {selectedItem.range}<br />
+                                                <strong>Components:</strong> {selectedItem.components}<br />
+                                                {selectedItem.material && (
                                                     <>
-                                                        <strong>Tool Proficiencies:</strong> {selectedItem.tool_proficiencies}<br />
+                                                        <strong>Material:</strong> {selectedItem.material}<br />
                                                     </>
                                                 )}
-                                                <strong>Languages:</strong> {selectedItem.languages || "None"}
+                                                <strong>Duration:</strong> {selectedItem.duration}
                                             </p>
 
-                                            {/* Equipment */}
-                                            {selectedItem.equipment && (
+                                            <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
+
+                                            {selectedItem.higher_level && (
                                                 <>
-                                                    <h5>Starting Equipment</h5>
-                                                    <ReactMarkdown>{selectedItem.equipment}</ReactMarkdown>
+                                                    <h5>At Higher Levels</h5>
+                                                    <ReactMarkdown>{selectedItem.higher_level}</ReactMarkdown>
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* MONSTERS */}
+                                    {category === "monsters" && selectedItem && (
+                                        <div className="card bg-dark text-white">
+                                            {/* Header */}
+                                            <h5>({selectedItem.size} {selectedItem.type}, {selectedItem.alignment})</h5>
+                                            <p>
+                                                AC {selectedItem.armor_class} ({selectedItem.armor_desc}) | HP {selectedItem.hit_points} ({selectedItem.hit_dice}) | Speed:{" "}
+                                                {selectedItem.speed
+                                                    ? Object.entries(selectedItem.speed)
+                                                        .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} ${v} ft.`)
+                                                        .join(", ")
+                                                    : "None"}
+                                            </p>
+
+                                            {/* Abilities */}
+                                            <div className="d-flex gap-2 mb-3 flex-wrap">
+                                                {["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"].map(stat => {
+                                                    const label = stat.slice(0, 3).toUpperCase();
+                                                    return (
+                                                        <div
+                                                            key={stat}
+                                                            className="text-center bg-secondary px-2 py-1 rounded"
+                                                            style={{ minWidth: "50px" }}
+                                                        >
+                                                            <strong>{label}</strong><br />
+                                                            {selectedItem[stat]}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+
+                                            {/* Defenses & Senses */}
+                                            <p>
+                                                <strong>Damage Resistances:</strong> {selectedItem.damage_resistances || "None"}<br />
+                                                <strong>Damage Immunities:</strong> {selectedItem.damage_immunities || "None"}<br />
+                                                <strong>Condition Immunities:</strong> {selectedItem.condition_immunities || "None"}<br />
+                                                <strong>Senses:</strong> {selectedItem.senses || "None"}<br />
+                                                <strong>Languages:</strong> {selectedItem.languages || "None"}<br />
+                                                <strong>Challenge:</strong> {selectedItem.challenge_rating} (XP TBD)
+                                            </p>
+
+                                            {/* Description */}
+                                            <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
+
+                                            {/* Special Abilities */}
+                                            {selectedItem.special_abilities?.length > 0 && (
+                                                <>
+                                                    <h5>Special Abilities</h5>
+                                                    {selectedItem.special_abilities.map((a, i) => (
+                                                        <p key={i}><strong>{a.name}.</strong> {a.desc}</p>
+                                                    ))}
                                                 </>
                                             )}
 
-                                            {/* Feature */}
-                                            {selectedItem.feature && (
+                                            {/* Actions */}
+                                            {selectedItem.actions?.length > 0 && (
                                                 <>
-                                                    <h5>{selectedItem.feature}</h5>
-                                                    <ReactMarkdown>{selectedItem.feature_desc}</ReactMarkdown>
+                                                    <h5>Actions</h5>
+                                                    {selectedItem.actions.map((a, i) => (
+                                                        <p key={i}><strong>{a.name}.</strong> {a.desc}</p>
+                                                    ))}
                                                 </>
                                             )}
-
-                                            {/* Suggested Characteristics */}
-                                            {selectedItem.suggested_characteristics && (
-                                                <>
-                                                    <h5>Suggested Characteristics</h5>
-                                                    <ReactMarkdown>{selectedItem.suggested_characteristics}</ReactMarkdown>
-                                                </>
-                                            )}
-
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+
+                                    {/* CLASSES */}
+                                    {category === "classes" && selectedItem && (
+                                        <div className="card bg-dark text-white mb-4">
+                                            <div className="card-body">
+
+                                                {/* Hit Dice & Proficiencies */}
+                                                <p>
+                                                    <strong>Hit Dice:</strong> {selectedItem.hit_dice}<br />
+                                                    <strong>Hit Points:</strong> {selectedItem.hp_at_1st_level} (1st level), {selectedItem.hp_at_higher_levels} (higher levels)<br />
+                                                    <strong>Armor Proficiencies:</strong> {selectedItem.prof_armor}<br />
+                                                    <strong>Weapon Proficiencies:</strong> {selectedItem.prof_weapons}<br />
+                                                    <strong>Tool Proficiencies:</strong> {selectedItem.prof_tools}<br />
+                                                    <strong>Saving Throws:</strong> {selectedItem.prof_saving_throws}<br />
+                                                    <strong>Skills:</strong> {selectedItem.prof_skills}<br />
+                                                </p>
+
+                                                {/* Starting Equipment */}
+                                                {selectedItem.equipment && (
+                                                    <>
+                                                        <h5>Starting Equipment</h5>
+                                                        <ReactMarkdown>{selectedItem.equipment}</ReactMarkdown>
+                                                    </>
+                                                )}
+
+                                                {/* Level Progression Table */}
+                                                {selectedItem.table && (
+                                                    <>
+                                                        <h5>Level Progression</h5>
+                                                        <div className="table-responsive">
+                                                            <table className="table table-dark table-striped table-bordered">
+                                                                <tbody>
+                                                                    {selectedItem.table
+                                                                        .trim()
+                                                                        .split("\n")
+                                                                        .filter(row => row.startsWith("|") && !row.includes("---"))
+                                                                        .map((row, index) => {
+                                                                            const cells = row
+                                                                                .split("|")
+                                                                                .slice(1, -1) // remove empty first and last cells
+                                                                                .map(cell => cell.trim());
+                                                                            return (
+                                                                                <tr key={index}>
+                                                                                    {cells.map((cell, i) => (
+                                                                                        <td key={i}>{cell}</td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            );
+                                                                        })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </>
+                                                )}
+
+
+                                                {/* Class Features */}
+                                                {selectedItem.desc && (
+                                                    <>
+                                                        <h5>Class Features</h5>
+                                                        <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
+                                                    </>
+                                                )}
+
+                                                {/* Subclasses / Archetypes */}
+                                                {selectedItem.archetypes?.length > 0 && (
+                                                    <>
+                                                        <h5>{selectedItem.subtypes_name}</h5>
+                                                        <ul>
+                                                            {selectedItem.archetypes.map((sub, i) => (
+                                                                <li key={i}>{sub.name}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </>
+                                                )}
+
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* RACES */}
+                                    {category === "races" && selectedItem && (
+                                        <>
+                                            {selectedItem.asi_desc && (
+                                                <ReactMarkdown>{selectedItem.asi_desc}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.age && (
+                                                <ReactMarkdown>{selectedItem.age}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.alignment && (
+                                                <ReactMarkdown>{selectedItem.alignment}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.size && (
+                                                <ReactMarkdown>{selectedItem.size}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.speed_desc && (
+                                                <ReactMarkdown>{selectedItem.speed_desc}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.vision && (
+                                                <ReactMarkdown>{selectedItem.vision}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.languages && (
+                                                <ReactMarkdown>{selectedItem.languages}</ReactMarkdown>
+                                            )}
+
+                                            {selectedItem.traits && (
+                                                <>
+                                                    <h5>Traits</h5>
+                                                    <ReactMarkdown>{selectedItem.traits}</ReactMarkdown>
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* FEAT DETAILS */}
+                                    {selectedItem && category === "feats" && (
+                                        <div className="card bg-dark text-white mb-4">
+                                            <div className="card-body">
+
+                                                {/* Prerequisite */}
+                                                {selectedItem.prerequisite && (
+                                                    <p><strong>{selectedItem.prerequisite}</strong></p>
+                                                )}
+
+                                                {/* Description */}
+                                                {selectedItem.desc && (
+                                                    <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
+                                                )}
+
+                                                {/* Effects */}
+                                                {selectedItem.effects_desc?.length > 0 && (
+                                                    <>
+                                                        <h5>Effects</h5>
+                                                        <ul>
+                                                            {selectedItem.effects_desc.map((effect, i) => (
+                                                                <li key={i}>{effect}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </>
+                                                )}
+
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* BACKGROUND DETAILS */}
+                                    {selectedItem && category === "backgrounds" && (
+                                        <div className="card bg-dark text-white mb-4">
+                                            <div className="card-body">
+
+                                                {/* Description */}
+                                                {selectedItem.desc && (
+                                                    <ReactMarkdown>{selectedItem.desc}</ReactMarkdown>
+                                                )}
+
+                                                {/* Proficiencies */}
+                                                <p>
+                                                    <strong>Skill Proficiencies:</strong> {selectedItem.skill_proficiencies || "None"}<br />
+                                                    {selectedItem.tool_proficiencies && (
+                                                        <>
+                                                            <strong>Tool Proficiencies:</strong> {selectedItem.tool_proficiencies}<br />
+                                                        </>
+                                                    )}
+                                                    <strong>Languages:</strong> {selectedItem.languages || "None"}
+                                                </p>
+
+                                                {/* Equipment */}
+                                                {selectedItem.equipment && (
+                                                    <>
+                                                        <h5>Starting Equipment</h5>
+                                                        <ReactMarkdown>{selectedItem.equipment}</ReactMarkdown>
+                                                    </>
+                                                )}
+
+                                                {/* Feature */}
+                                                {selectedItem.feature && (
+                                                    <>
+                                                        <h5>{selectedItem.feature}</h5>
+                                                        <ReactMarkdown>{selectedItem.feature_desc}</ReactMarkdown>
+                                                    </>
+                                                )}
+
+                                                {/* Suggested Characteristics */}
+                                                {selectedItem.suggested_characteristics && (
+                                                    <>
+                                                        <h5>Suggested Characteristics</h5>
+                                                        <ReactMarkdown>{selectedItem.suggested_characteristics}</ReactMarkdown>
+                                                    </>
+                                                )}
+
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
 
                             </div>
 
-                        </div>
-
-                    )}
+                        )}
+                    </div>
 
                 </div>
-
-            </div>
-            {/* PAGINATION */}
-            <div className="d-flex align-items-center gap-2 mt-3">
-
-                {/* Previous Button */}
-                <button
-                    className="btn btn-secondary"
-                    disabled={page <= 1}
-                    onClick={() => fetchData(null, page - 1)}
-                >
-                    &lt;
-                </button>
-
-                {/* Page Buttons */}
-                {pageNumbers.map((num) => (
-                    <button
-                        key={num}
-                        className={`btn ${num === page ? "btn-primary" : "btn-outline-secondary"}`}
-                        onClick={() => fetchData(null, num)}
-                    >
-                        {num}
-                    </button>
-                ))}
-
-                {/* Next Button */}
-                <button
-                    className="btn btn-secondary"
-                    disabled={page >= totalPages}
-                    onClick={() => fetchData(null, page + 1)}
-                >
-                    &gt;
-                </button>
 
             </div>
 

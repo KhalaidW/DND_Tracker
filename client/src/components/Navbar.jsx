@@ -1,8 +1,9 @@
 import { Link, NavLink } from "react-router-dom";
+import './Navbar.css';
 
 export default function Navbar() {
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav className="navbar navbar-expand-lg custom-navbar">
       <div className="container">
         <Link className="navbar-brand" to="/">
           D&D Tracker
