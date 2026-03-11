@@ -1,5 +1,4 @@
 # D&D Tracker
-[![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/KhalaidW/DND_Tracker)
 
 ## About The Project
 
